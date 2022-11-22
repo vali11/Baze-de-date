@@ -1,0 +1,98 @@
+LAB 3 - EABD
+
+pb. 1
+DECLARE
+  v_id angajati.employee_id%TYPE;
+BEGIN
+  SELECT MAX(employee_id) + 1 INTO v_id FROM angajati;
+  INSERT INTO angajati VALUES(v_id, 'Valentin', 'Voin', 'vvoin', '0722365', SYSDATE,'SA_REP', 30000, NULL, NULL,NULL, NULL);
+
+pb2.
+DECLARE 
+  v_id angajati.employee_id%TYPE;
+BEGIN
+  SELECT MAX(employee_id) + 1 INTO v_id FROM angajati;
+  INSERT INTO angajati VALUES(v_id, 'Valentin', 'Voin', 'vvoin', '0722365', SYSDATE,'SA_REP', 30000, NULL, NULL,NULL, NULL);
+END;
+
+
+pb.3 
+BEGIN
+DELETE FROM ANGAJATI WHERE employee_id = (SELECT MAX(employee_id) FROM ANGAJATI);
+END;
+
+BEGIN
+UPDATE ANGAJATI SET salary = salary*0.9 WHERE manager_id IS NULL;
+END;
+
+pb. 4
+BEGIN
+MERGE INTO angajati a
+USING employees e
+ON (a.employee_id = e.employee_id)
+WHEN MATCHED THEN 
+UPDATE SET 
+a.first_name = e.first_name,
+a.last_name = e.last_name,
+a.email = e.email,
+a.phone_number = e.phone_number,
+a.hire_date= e.hire_date,
+a.job_id = e.job_id,
+a.salary = e.salary,
+a.commission_pct = e.commission_pct, 
+a.manager_id = e.manager_id,
+a.department_id= e.department_id,
+a.bonus = e.bonus
+WHEN NOT MATCHED THEN
+INSERT VALUES(e.employee_id,e.first_name,e.last_name,e.email,e.phone_number,e.hire_date,e.job_id,e.salary,e.commission_pct,e.manager_id,e.department_id,e.bonus);
+END;
+
+pb.5
+ALTER TABLE ANGAJATI ADD Monthly_Wage NUMBER(5);
+
+pb. 6
+DECLARE
+	v_prenume angajati.first_name %TYPE;
+	v_nume angajati.last_name %TYPE;
+	v_salariu NUMBER(7,2);
+            v_id INT;
+BEGIN
+	SELECT  max(employee_id) INTO v_id from angajati;
+        SELECT  first_name, last_name, ROUND(salary/12,2) INTO v_prenume, v_nume, v_salariu FROM angajati WHERE employee_id=v_id;
+DBMS_OUTPUT.PUT_LINE('Eu ma numesc '||v_prenume || ' '|| v_nume || ' si am salariu lunar de '|| v_salariu);
+END;
+
+pb. 7
+DECLARE CURSOR cur_ang IS
+SELECT first_name, last_name, salary FROM ANGAJATI
+WHERE job_id='SA_REP';
+BEGIN
+FOR v_ang_record IN cur_ang LOOP
+DBMS_OUTPUT.PUT_LINE ('Ma numesc ' || v_ang_record.first_name || ' ' || v_ang_record.last_name || ' si am salariul ' || v_ang_record.salary);
+END LOOP;
+END;
+
+PB. 8
+DECLARE CURSOR cur_ang_update IS
+SELECT employee_id, last_name, salary FROM ANGAJATI 
+WHERE job_id LIKE 'AD%' FOR UPDATE NOWAIT;
+v_count NUMBER(3);
+BEGIN
+FOR cur_ang_update_rec IN cur_ang_update LOOP
+UPDATE ANGAJATI SET salary = salary*1.1 WHERE CURRENT OF cur_ang_update;
+DBMS_OUTPUT.PUT_LINE('Numele meu de familie e '|| cur_ang_update_rec.last_name || ', am id-ul ' || cur_ang_update_rec.employee_id || ' si salariul meu a fost actualizat la valoarea ' || cur_ang_update_rec.salary);
+END LOOP;
+SELECT COUNT(employee_id) INTO v_count FROM ANGAJATI WHERE job_id LIKE 'AD%';
+DBMS_OUTPUT.PUT_LINE('Salariul a fost actualizat pentru ' || v_count || ' persoane');
+END;
+
+pb. 9 
+BEGIN
+UPDATE ANGAJATI SET first_name = 'Valentin-Ion' WHERE employee_id = (SELECT MAX(employee_id) FROM ANGAJATI);
+SAVEPOINT s;
+UPDATE ANGAJATI SET email = 'vivoin' WHERE employee_id = (SELECT MAX(employee_id) FROM ANGAJATI);
+ROLLBACK TO SAVEPOINT s;
+UPDATE ANGAJATI SET phone_number = '0722341' WHERE employee_id = (SELECT MAX(employee_id) FROM ANGAJATI);
+COMMIT;
+END;
+

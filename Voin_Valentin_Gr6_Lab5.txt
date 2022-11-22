@@ -1,0 +1,205 @@
+Cursori expliciţi
+·        Atribute cursor
+·        Cursori cu parametru
+·        Cursori de tip FOR
+·        Cursori multipli
+Realizaţi blocuri anonime cu următoarele funcţionalităţi
+1.       Afişaţi salariul mediu al reprezentanţilor de vânzări din cadrul tabelei ANGAJATI
+DECLARE
+v_sal_mediu angajati.salary%TYPE;
+BEGIN 
+SELECT AVG(salary) INTO v_sal_mediu FROM angajati WHERE job_id='SA_REP';
+DBMS_OUTPUT.PUT_LINE('Salariul mediu este '||v_sal_mediu);
+END;
+2.       Afişaţi numele, prenumele şi salariul reprezentanţilor de vânzări. Se vor utiliza variabile scalare pentru fiecare element ce trebuie afişat din cadrul fiecărei linii returnate. La finalul listei se va afişa şi salariul lor mediu
+DECLARE
+  v_dep VARCHAR2(20) := 'SA_REP';
+  CURSOR cur_ang IS 
+SELECT first_name, last_name, salary FROM angajati WHERE job_id = v_dep;
+  v_nume ANGAJATI.FIRST_NAME%TYPE;
+  v_prenume ANGAJATI.LAST_NAME%TYPE;
+  v_salariu ANGAJATI.SALARY%TYPE;
+  v_count INT := 0;
+  v_suma FLOAT := 0;
+  v_salariu_mediu FLOAT;
+BEGIN
+  OPEN cur_ang;
+  LOOP
+    v_count := v_count+1;
+    FETCH cur_ang INTO v_nume, v_prenume, v_salariu;
+    EXIT WHEN cur_ang%NOTFOUND;
+    v_suma := v_suma + v_salariu;
+    DBMS_OUTPUT.PUT_LINE(v_count || '. ' || v_nume || ' ' || v_prenume || ' - ' || v_salariu);
+  END LOOP;
+    v_salariu_mediu := ROUND( v_suma / cur_ang%ROWCOUNT , 2 );
+    DBMS_OUTPUT.PUT_LINE ('Salariu mediu anual pentru pozitia ' || v_dep || ' este de: ' ||  v_salariu_mediu);
+  CLOSE cur_ang;
+END
+3.       Pe exemplul anterior, testaţi toate atributele cursorului – %ISOPEN, %NOTFOUND, %FOUND, %ROWCOUNT –  în etape diferite din ciclul de viaţă al cursorului
+DECLARE
+  v_dep VARCHAR2(20) := 'SA_REP';
+  CURSOR cur_ang IS 
+SELECT first_name, last_name, salary FROM angajati WHERE job_id = v_dep;
+  v_nume ANGAJATI.FIRST_NAME%TYPE;
+  v_prenume ANGAJATI.LAST_NAME%TYPE;
+  v_salariu ANGAJATI.SALARY%TYPE;
+  v_count INT := 0;
+  v_suma FLOAT := 0;
+  v_salariu_mediu FLOAT;
+BEGIN
+  OPEN cur_ang;
+  IF cur_ang%ISOPEN THEN
+    DBMS_OUTPUT.PUT_LINE ('Cursor deschis');
+  ELSE
+    DBMS_OUTPUT.PUT_LINE ('Cursor inchis');
+  END IF;
+  LOOP
+    v_count := v_count+1;
+    FETCH cur_ang INTO v_nume, v_prenume, v_salariu;
+    EXIT WHEN cur_ang%NOTFOUND;
+    IF cur_ang%FOUND THEN
+      v_suma := v_suma + v_salariu;
+    END IF;
+    DBMS_OUTPUT.PUT_LINE(v_count || '. ' || v_nume || ' ' || v_prenume || ' - ' || v_salariu);
+  END LOOP;
+    v_salariu_mediu := ROUND( v_suma / cur_ang%ROWCOUNT , 2 );
+    DBMS_OUTPUT.PUT_LINE ('Salariu mediu anual pentru pozitia ' || v_dep || ' este de: ' ||  v_salariu_mediu);
+  CLOSE cur_ang;
+END
+4.       Rezolvaţi problema de la punctul anterior prin utilizarea variabilelor tip înregistrare
+DECLARE
+  v_dep VARCHAR(20) := 'SA_REP';
+  CURSOR cur_ang IS 
+SELECT * FROM angajati WHERE job_id = v_dep;
+  v_rec_ang cur_ang%ROWTYPE;
+  v_count INT := 0;
+  v_suma FLOAT := 0;
+  v_salariu_mediu FLOAT;
+BEGIN
+  OPEN cur_ang;
+  LOOP
+    FETCH cur_ang INTO v_rec_ang;
+    EXIT WHEN cur_ang%NOTFOUND;
+
+    IF cur_ang%FOUND THEN
+      v_suma := v_suma + v_rec_ang.salary;
+    END IF;
+    v_count := v_count+1;
+
+    DBMS_OUTPUT.PUT_LINE(cur_ang%ROWCOUNT || '. ' || v_rec_ang.first_name || ' ' || v_rec_ang.last_name || ' - ' || v_rec_ang.salary);
+  END LOOP;
+    v_salariu_mediu := ROUND( v_suma / v_count , 2 );
+    DBMS_OUTPUT.PUT_LINE ('Salariu mediu anual pentru departamentul ' || v_dep || ' este de: ' ||  v_salariu_mediu);
+  CLOSE cur_ang;
+END;
+
+5.       Simplificaţi problema folosind cursori de tip FOR
+DECLARE
+  v_dep VARCHAR(20) := 'SA_REP';
+  CURSOR cur_ang IS 
+SELECT * FROM angajati WHERE job_id = v_dep;
+  v_count INT := 0;
+  v_suma FLOAT := 0;
+  v_salariu_mediu FLOAT;
+BEGIN
+FOR v_rec_ang IN cur_ang LOOP
+    IF cur_ang%FOUND THEN
+       v_suma := v_suma + v_rec_ang.salary;
+    END IF;
+    v_count := v_count+1;
+
+    DBMS_OUTPUT.PUT_LINE(cur_ang%ROWCOUNT || '. ' || v_rec_ang.first_name || ' ' || v_rec_ang.last_name || ' - ' || v_rec_ang.salary);
+  END LOOP;
+    v_salariu_mediu := ROUND( v_suma / v_count , 2 );
+    DBMS_OUTPUT.PUT_LINE ('Salariu mediu anual pentru departamentul ' || v_dep || ' este de: ' ||  v_salariu_mediu);
+END;
+6.       Dar dacă nu utilizaţi în mod explicit cursori cu nume, ci folosiţi o subinterogare?
+DECLARE
+v_dep VARCHAR2(20) := 'SA_REP';
+v_count INT :=1;
+v_suma INT :=0;
+v_sal_mediu FLOAT;
+BEGIN 
+FOR v_rec_ang IN (SELECT first_name, last_name, salary FROM angajati WHERE job_id=v_dep) LOOP
+DBMS_OUTPUT.PUT_LINE(v_count||'.'||v_rec_ang.first_name||' '||v_rec_ang.last_name||' '||v_rec_ang.salary);
+v_suma := v_suma + v_rec_ang.salary;
+v_count := v_count+1;
+END LOOP;
+v_sal_mediu := ROUND((v_suma/v_count),2);
+DBMS_OUTPUT.PUT_LINE('Salariul mediu pentru angajatii din departamentul '||v_dep||' este '||v_sal_mediu);
+END;
+7.       Se va rezolva aceeaşi problemă ca la punctul 2, însă denumirea funcţiei (JOB_ID) va fi transmisă ca parametru. Testaţi funcţionalitatea pentru 2-3 funcţii
+DECLARE
+  CURSOR curs_ang (p_dep VARCHAR) IS 
+SELECT first_name,last_name,salary FROM angajati WHERE JOB_ID = p_dep;
+  v_count INT := 1;
+  v_suma FLOAT := 0;
+  v_salariu_mediu FLOAT;
+BEGIN
+  FOR v_rec_ang IN curs_ang('SA_REP')
+    LOOP
+      IF curs_ang%FOUND THEN
+       v_suma := v_suma + v_rec_ang.salary;
+      END IF;
+      DBMS_OUTPUT.PUT_LINE(v_count|| '. ' || v_rec_ang.FIRST_NAME || ' ' || v_rec_ang.LAST_NAME || ' - ' || v_rec_ang.SALARY);
+      v_count := v_count+1;
+    END LOOP;
+    v_salariu_mediu := ROUND( v_suma / v_count , 2 );
+    DBMS_OUTPUT.PUT_LINE ('Salariu mediu anual pentru pozitia SA_REP ' || ' este de: ' ||  v_salariu_mediu);
+END;
+8.       Modificaţi exemplul anterior prin adăugarea unui nou parametru. Cel de-al doilea (p_vechime) se referă la vechimea angajatului la actualul loc de muncă. Astfel, va trebui să afişaţi angajaţii ce ocupă o anumită funcţie şi au vechime de cel puţin valoarea lui p_vechime (ex. 7 ani)
+DECLARE
+  CURSOR curs_ang (p_dep VARCHAR,p_vechime INT) IS 
+SELECT first_name,last_name,salary FROM angajati WHERE job_id = p_dep AND (EXTRACT(year from SYSDATE)-EXTRACT(year from hire_date))>=p_vechime ;
+  v_count INT := 1;
+  v_suma FLOAT := 0;
+  v_salariu_mediu FLOAT;
+BEGIN
+  FOR v_rec_ang IN curs_ang('SA_REP',7)
+    LOOP
+      IF curs_ang%FOUND THEN
+       v_suma := v_suma + v_rec_ang.salary;
+      END IF;
+      DBMS_OUTPUT.PUT_LINE(v_count|| '. ' || v_rec_ang.FIRST_NAME || ' ' || v_rec_ang.LAST_NAME || ' - ' || v_rec_ang.SALARY);
+      v_count := v_count+1;
+    END LOOP;
+    v_salariu_mediu := ROUND( v_suma / v_count , 2 );
+    DBMS_OUTPUT.PUT_LINE ('Salariu mediu anual pentru pozitia SA_REP ' || ' este de: ' ||  v_salariu_mediu);
+END;
+9.       Cu ajutorul unui cursor multiplu se va parcurge tabela pentru fiecare funcţie, iar în cadrul acesteia angajaţii vor fi afişaţi alfabetic după nume, apoi prenume. Începutul unei noi funcţii va fi marcat vizual corespunzător, la finalul fiecăreia apărând informaţii statistice precum salariul mediu lunar şi fondul de salarii lunar al fiecărei funcţii. Funcţiile vor fi trecute în ordine alfabetică
+DECLARE 
+  CURSOR funct_curs IS SELECT DISTINCT job_id from angajati order by job_id;
+  CURSOR ang_curs (p_funct VARCHAR2) IS SELECT * FROM angajati WHERE job_id=p_funct ORDER BY last_name, first_name;
+  v_sal NUMBER(9,2);
+  v_count INT;
+BEGIN
+  FOR v_funct IN funct_curs
+  LOOP
+    DBMS_OUTPUT.PUT_LINE('Functia ocupata este '||v_funct.job_id);
+      v_count:=0;
+      v_sal:=0;
+    FOR v_ang in ang_curs(v_funct.job_id)
+       LOOP
+      v_count:=v_count+1;
+      v_sal:=v_sal+v_ang.salary;
+      DBMS_OUTPUT.PUT_LINE(v_count||'. '||v_ang.last_name || ' '|| v_ang.first_name||' - '||v_ang.salary);
+    END LOOP;
+    DBMS_OUTPUT.PUT_LINE('Salariu mediu: '||ROUND(v_sal/v_count,2));
+    DBMS_OUTPUT.PUT_LINE('Fondul lunar: '||v_sal);
+    DBMS_OUTPUT.NEW_LINE;
+  END LOOP;
+END;
+10.   Realizaţi un cursor care să permită scădere cu 5% a salariului vânzătorilor, inclusiv a şefului lor. Rezolvarea trebuie să ţină cont că e posibil să interacţioneze operaţiunile mai multor utilizatori asupra aceluiaşi set de date. În caz de concurenţă se va aştepta 5 secunde.
+DECLARE 
+CURSOR cur_ang_update IS
+SELECT employee_id, last_name, salary FROM ANGAJATI 
+WHERE job_id LIKE 'SA%' FOR UPDATE NOWAIT;
+v_count NUMBER(3);
+BEGIN
+FOR cur_ang_update_rec IN cur_ang_update LOOP
+UPDATE ANGAJATI SET salary = salary*0.95 WHERE CURRENT OF cur_ang_update;
+DBMS_OUTPUT.PUT_LINE('Numele meu de familie e '|| cur_ang_update_rec.last_name || ', am id-ul ' || cur_ang_update_rec.employee_id || ' si salariul meu a fost actualizat la valoarea ' || cur_ang_update_rec.salary);
+END LOOP;
+SELECT COUNT(employee_id) INTO v_count FROM ANGAJATI WHERE job_id LIKE 'SA%';
+DBMS_OUTPUT.PUT_LINE('Salariul a fost actualizat pentru ' || v_count || ' persoane');
+END; 

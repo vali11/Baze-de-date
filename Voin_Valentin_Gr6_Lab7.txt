@@ -1,0 +1,205 @@
+Tratarea exceptiilor
+
+1. Afişaţi numele, prenumele şi salariul pentru o anumită categorie şi returnaţi aceste informaţii în cadrul unor variabile. Testaţi comportamentul execuţiei în cazul în care afişăm informaţii legate despre preşedintele companiei. Apoi despre reprezentanţii de vânzări şi în final despre o categorie care nu există sau a fost scrisă eronat. Remediaţi codul pentru a nu fi întreruptă execuţia în niciuna dintre aceste situaţii;
+DECLARE 
+e_invalid_department EXCEPTION;
+v_dep VARCHAR2(20) := 'hjk';
+  CURSOR cur_ang IS 
+SELECT first_name, last_name, salary FROM angajati WHERE job_id = v_dep;
+  v_nume angajati.last_name%TYPE;
+  v_prenume angajati.first_name%TYPE;
+  v_salariu angajati.salary%TYPE;
+  v_count INT :=0;
+BEGIN
+  OPEN cur_ang;
+  LOOP
+    v_count := v_count+1;
+    FETCH cur_ang INTO v_nume, v_prenume, v_salariu;
+    IF SQL%NOTFOUND THEN
+         RAISE e_invalid_department;
+    END IF;
+    DBMS_OUTPUT.PUT_LINE(v_count || '. ' || v_nume || ' ' || v_prenume || ' - ' || v_salariu);
+END LOOP;
+CLOSE cur_ang;
+EXCEPTION 
+  WHEN e_invalid_department THEN
+     DBMS_OUTPUT.PUT_LINE('Departamentul nu exista');
+END;
+2.       Dar dacă criteriul interogării se bazează pe o variabilă incompatibilă ca tip?
+DECLARE 
+e_name EXCEPTION;
+PRAGMA EXCEPTION_INIT(e_name, -20734);
+v_dep angajati.job_id%TYPE := 15;
+  CURSOR cur_ang IS 
+SELECT first_name, last_name, salary FROM angajati WHERE job_id = v_dep;
+  v_nume angajati.last_name%TYPE;
+  v_prenume angajati.first_name%TYPE;
+  v_salariu angajati.salary%TYPE;
+  v_count INT :=0;
+BEGIN
+  OPEN cur_ang;
+  LOOP
+    v_count := v_count+1;
+    FETCH cur_ang INTO v_nume, v_prenume, v_salariu;
+    IF cur_ang%NOTFOUND THEN
+         RAISE_APPLICATION_ERROR(-20734, 'Tip de date incompatibil');
+    ELSE
+         DBMS_OUTPUT.PUT_LINE(v_count || '. ' || v_nume || ' ' || v_prenume || ' - ' || v_salariu);
+    END IF;
+END LOOP;
+CLOSE cur_ang;
+EXCEPTION 
+  WHEN e_name THEN
+     DBMS_OUTPUT.PUT_LINE('Tipul de date necesar este VARCHAR');
+END;
+3.       Pentru tabela Angajaţi definiţi constrângerea de cheie primară (în cazul în care aveţi înregistrări neconforme, remediaţi mai întâi problema de unicitate). Adăugaţi o altă constrângere care solicită completarea unei adrese de email pentru fiecare angajat (faceţi şi aici eventualele corecţii premergătoare). Trataţi apoi ambele tipuri de erori care ar putea să pericliteze integritatea tabelei Angajaţi;
+ALTER TABLE angajati
+ADD CONSTRAINT ang_employee_id_pk PRIMARY KEY(employee_id);
+alter table "ANGAJATI" add constraint
+"ang_email_notnull" check ( "EMAIL" IS NOT NULL);
+DECLARE
+e_name EXCEPTION;
+PRAGMA EXCEPTION_INIT(e_name, -02290);
+BEGIN 
+INSERT INTO angajati (employee_id, first_name, last_name, hire_date, job_id, email, salary)
+VALUES (100, 'Valentin','Voin', SYSDATE, 'SA_REP', 'vvv', 3000);
+IF SQL%FOUND THEN
+DBMS_OUTPUT.PUT_LINE('Angajat inserat cu succes');
+ELSE
+RAISE_APPLICATION_ERROR(-02290, 'Adresa de email este obligatorie');
+END IF;
+EXCEPTION 
+WHEN e_name THEN 
+DBMS_OUTPUT.PUT_LINE('Adresa de mail este un camp obligatoriu');
+WHEN DUP_VAL_ON_INDEX THEN
+DBMS_OUTPUT.PUT_LINE('Ati introdus un id care exista deja.');
+END;
+4.       Definiţi o eroare care să vă atenţioneze atunci când încercaţi să introduceţi/actualizaţi un salariu cu o valoare mai mare de 30.000$. În cadrul tabelei nu se vor configura constrângeri de tip CHECK pentru astfel de condiţii.
+DECLARE
+e_salary EXCEPTION;
+v_salary angajati.salary%TYPE := 35000;
+BEGIN
+IF v_salary > 30000 THEN
+RAISE e_salary;
+ELSE
+INSERT INTO angajati (employee_id, first_name, last_name, hire_date, job_id, email, salary)
+VALUES (300, 'Valentin','Voin', SYSDATE, 'SA_REP', 'vvv', v_salary);
+END IF;
+EXCEPTION
+WHEN e_salary THEN
+DBMS_OUTPUT.PUT_LINE('Salariul nu poate fi mai mare de 30.000');
+END;
+
+Proceduri PL/SQL
+ 
+Să se realizeze următoarele proceduri PL/SQL, verificaţi apoi corectitudinea execuţiei lor pentru rezolvarea următoarelor cerinţe:
+1.       Procedura ANGAJEZ va adăuga un nou angajat, toate valorile fiind menţionate în mod explicit în cadrul comenzii INSERT, cu excepţia datei angajării, identică cu data curentă. Tot în cadrul procedurii se va afişa şi un mesaj de confirmare a adăugării, în cazul în care s-a efectuat cu succes;
+CREATE OR REPLACE PROCEDURE angajez IS
+v_data angajati.hire_date%TYPE := SYSDATE;
+BEGIN
+INSERT INTO angajati (employee_id, first_name, last_name, email, phone_number, hire_date, job_id, salary)
+VALUES (300, 'Roxana','Popescu', 'roxi@gmail.com', 0722351889, v_data, 'SA_REP', 5000);
+DBMS_OUTPUT.PUT_LINE('Inserare realizata cu succes');
+END;
+
+BEGIN 
+angajez;
+END;
+2.       Procedura ANGAJEAZA_MA vă va angaja din nou (id-ul va fi următorul număr nealocat, vă va angaja din nou ca reprezentant de vânzări, salariul minim al categoriei respective, email-ul va fi concatenarea numelui cu prenumele şi un domeniu ales);
+CREATE OR REPLACE PROCEDURE angajeaza_ma IS
+v_ang_id angajati.employee_id%TYPE;
+v_nume angajati.last_name%TYPE := 'Voin';
+v_prenume angajati.first_name%TYPE := 'Valentin';
+v_salary angajati.salary%TYPE ;
+v_domeniu VARCHAR2(30) := 'ubbcluj.ro';
+BEGIN
+SELECT MAX(employee_id) + 1 INTO v_ang_id FROM angajati;
+SELECT MIN(salary) INTO v_salary FROM angajati WHERE job_id='SA_REP';
+INSERT INTO angajati (employee_id, first_name, last_name, email, phone_number, hire_date, job_id, salary) VALUES(v_ang_id, v_prenume, v_nume, v_nume||'.'||v_prenume||'@'||v_domeniu, 0722365, SYSDATE,'SA_REP', v_salary);
+IF SQL%FOUND THEN 
+DBMS_OUTPUT.PUT_LINE('INSERARE CU SUCCES');
+ELSE 
+DBMS_OUTPUT.PUT_LINE('INSERARE FARA SUCCES');
+END IF;
+END;
+
+BEGIN
+angajeaza_ma;
+END;
+3.       Procedura ANGAJEZ_CA va angaja într-o categorie transmisă ca parametru, o persoană cu id unic, nume, prenume generic, salariu aleatoriu între minimul şi maximul categoriei, data curentă, email ca la problema 2;
+CREATE OR REPLACE PROCEDURE angajez_ca (v_dep IN VARCHAR2) IS
+v_ang_id angajati.employee_id%TYPE;
+v_nume angajati.last_name%TYPE := 'Nume';
+v_prenume angajati.first_name%TYPE := 'Prenume';
+v_salary angajati.salary%TYPE ;
+v_domeniu VARCHAR2(30) := 'ubbcluj.ro';
+v_min INT;
+v_max INT;
+BEGIN
+SELECT MIN(salary) INTO v_min FROM angajati WHERE job_id=v_dep;
+SELECT MAX(salary) INTO v_max FROM angajati WHERE job_id=v_dep;
+v_salary := dbms_random.value(v_min,v_max);
+SELECT MAX(employee_id) + 1 INTO v_ang_id FROM angajati;
+INSERT INTO angajati (employee_id, first_name, last_name, email, phone_number, hire_date, job_id, salary) VALUES(v_ang_id, v_prenume, v_nume, v_nume||'.'||v_prenume||i||'@'||v_domeniu, 0722365, SYSDATE,v_dep, v_salary);
+IF SQL%FOUND THEN 
+DBMS_OUTPUT.PUT_LINE('INSERARE CU SUCCES');
+ELSE 
+DBMS_OUTPUT.PUT_LINE('INSERARE FARA SUCCES');
+END IF;
+END;
+4.       Procedura ANGAJEZ_MASIV_CA va angaja într-o categorie transmisă ca parametru, un număr de  persoane menţionate tot ca parametru, având id unic, nume, prenume generic unice, salariu aleatoriu între minimul şi maximul categoriei, data curentă, email ca la problema 2. Apelaţi procedura atât nominal, poziţional, cât şi mixt;
+CREATE OR REPLACE PROCEDURE angajez_masiv_ca (v_dep IN VARCHAR2, v_nr_pers IN INT) IS
+v_ang_id angajati.employee_id%TYPE;
+v_nume angajati.last_name%TYPE := 'Nume';
+v_prenume angajati.first_name%TYPE := 'Prenume';
+v_salary angajati.salary%TYPE ;
+v_domeniu VARCHAR2(30) := 'ubbcluj.ro';
+v_min INT;
+v_max INT;
+BEGIN
+SELECT MIN(salary) INTO v_min FROM angajati WHERE job_id=v_dep;
+SELECT MAX(salary) INTO v_max FROM angajati WHERE job_id=v_dep;
+FOR i IN 1..v_nr_pers LOOP
+v_salary := dbms_random.value(v_min,v_max);
+SELECT MAX(employee_id) + 1 INTO v_ang_id FROM angajati;
+INSERT INTO angajati (employee_id, first_name, last_name, email, phone_number, hire_date, job_id, salary) VALUES(v_ang_id, v_prenume||i, v_nume, v_nume||'.'||v_prenume||'@'||v_domeniu, 0722365, SYSDATE,v_dep, v_salary);
+IF SQL%FOUND THEN 
+DBMS_OUTPUT.PUT_LINE('INSERARE CU SUCCES');
+ELSE 
+DBMS_OUTPUT.PUT_LINE('INSERARE FARA SUCCES');
+END IF;
+END LOOP;
+END;
+
+BEGIN
+angajez_masiv_ca ('SA_REP', 3);
+END;
+
+BEGIN 
+angajez_masiv_ca(v_dep=>'SA_REP',v_nr_pers=>3);
+END;
+
+BEGIN 
+angajez_masiv_ca('SA_REP',v_nr_pers=>3);
+END;
+5.       Procedura CONCEDIEZ_ULTIM va şterge şi va afişa o confirmare, angajatul cu cel mai mare ID. Confirmarea se va face prin apelarea unei proceduri locale denumită AFISEZ_CONFIRMARE.
+CREATE OR REPLACE PROCEDURE concediez_ultim IS
+v_ang_id angajati.employee_id%TYPE;
+PROCEDURE afiseaza IS 
+BEGIN 
+IF SQL%FOUND THEN 
+DBMS_OUTPUT.PUT_LINE('Stergere efectuata cu succes');
+ELSE
+DBMS_OUTPUT.PUT_LINE('Stergere esuata');
+END IF;
+END afiseaza;
+BEGIN 
+SELECT MAX(employee_id) INTO v_ang_id FROM angajati;
+DELETE FROM angajati WHERE employee_id=v_ang_id;
+afiseaza;
+END concediez_ultim;
+
+
+BEGIN 
+concediez_ultim;
+END;

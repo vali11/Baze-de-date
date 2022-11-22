@@ -1,0 +1,145 @@
+1.	Testaţi dacă un număr – memorat într-o variabilă – este par;
+DECLARE
+v_numar NUMBER :=10;
+BEGIN
+IF MOD(v_numar,2)=0 THEN
+DBMS_OUTPUT.PUT_LINE('Numarul este par');
+ELSE DBMS_OUTPUT.PUT_LINE('Numarul este par');
+END IF;
+END;
+2.	Se dă transcrierea în litere pentru numerele de la 1 la 9. Avem o variabilă care poate conţine un număr întreg între 11 şi 20, reprezentând sume în lei. Afişaţi suma în lei în litere (ca la bancă/poştă), găsind câteva reguli de compunere ale numeralelor şi folosind transcrierile cifrelor de la 1 la 9. Se va rezolva cu structuri IF;
+DECLARE 
+v_numar NUMBER :=14;
+BEGIN 
+IF v_numar=11 THEN
+DBMS_OUTPUT.PUT_LINE('Transcrierea numarului '||v_numar||' este unsprezece');
+ELSIF v_numar=12 THEN
+DBMS_OUTPUT.PUT_LINE('Transcrierea numarului '||v_numar||' este doisprezece');
+ELSIF v_numar=13 THEN
+DBMS_OUTPUT.PUT_LINE('Transcrierea numarului '||v_numar||' este treisprezece');
+ELSIF v_numar=14 THEN
+DBMS_OUTPUT.PUT_LINE('Transcrierea numarului '||v_numar||' este paisprezece');
+ELSIF v_numar=15 THEN
+DBMS_OUTPUT.PUT_LINE('Transcrierea numarului '||v_numar||' este cincisprezece');
+ELSIF v_numar=16 THEN
+DBMS_OUTPUT.PUT_LINE('Transcrierea numarului '||v_numar||' este saisprezece');
+ELSIF v_numar=17 THEN
+DBMS_OUTPUT.PUT_LINE('Transcrierea numarului '||v_numar||' este saptesprezece');
+ELSIF v_numar=18 THEN
+DBMS_OUTPUT.PUT_LINE('Transcrierea numarului '||v_numar||' este optsprezece');
+ELSIF v_numar=19 THEN
+DBMS_OUTPUT.PUT_LINE('Transcrierea numarului '||v_numar||' este nouasprezece');
+ELSIF v_numar=20 THEN
+DBMS_OUTPUT.PUT_LINE('Transcrierea numarului '||v_numar||' este douazeci');
+ELSE
+DBMS_OUTPUT.PUT_LINE('Valoarea nu se incadreaza in interval');
+END IF;
+END;
+3.	Rezolvaţi aceeaşi problemă cu o structură CASE;
+DECLARE 
+v_numar NUMBER;
+BEGIN
+CASE v_numar 
+WHEN 11 THEN DBMS_OUTPUT.PUT_LINE('Transcrierea numarului '||v_numar||' este unsprezece');
+WHEN 12 THEN DBMS_OUTPUT.PUT_LINE('Transcrierea numarului '||v_numar||' este doisprezece');
+WHEN 13 THEN DBMS_OUTPUT.PUT_LINE('Transcrierea numarului '||v_numar||' este treisprezece');
+WHEN 14 THEN DBMS_OUTPUT.PUT_LINE('Transcrierea numarului '||v_numar||' este paisprezece');
+WHEN 15 THEN DBMS_OUTPUT.PUT_LINE('Transcrierea numarului '||v_numar||' este cincisprezece');
+WHEN 16 THEN DBMS_OUTPUT.PUT_LINE('Transcrierea numarului '||v_numar||' este saisprezece');
+WHEN 17 THEN DBMS_OUTPUT.PUT_LINE('Transcrierea numarului '||v_numar||' este saptesprezece');
+WHEN 18 THEN DBMS_OUTPUT.PUT_LINE('Transcrierea numarului '||v_numar||' este optsprezece');
+WHEN 19 THEN DBMS_OUTPUT.PUT_LINE('Transcrierea numarului '||v_numar||' este nouasprezece');
+WHEN 20 THEN DBMS_OUTPUT.PUT_LINE('Transcrierea numarului '||v_numar||' este douazeci');
+ELSE DBMS_OUTPUT.PUT_LINE('Valoarea nu se incadreaza in interval');
+END CASE;
+END;
+4.	Apoi cu o expresie CASE;
+DECLARE 
+v_numar NUMBER:=11;
+v_transcriere VARCHAR2(30);
+BEGIN
+v_transcriere:=CASE v_numar
+WHEN 11 THEN 'unsprezece'
+WHEN 12 THEN 'doisprezece'
+WHEN 13 THEN 'treisprezece'
+WHEN 14 THEN 'paisprezece'
+WHEN 15 THEN 'cincisprezece'
+WHEN 16 THEN 'saisprezece'
+WHEN 17 THEN 'saptesprezece'
+WHEN 18 THEN 'optsprezece'
+WHEN 19 THEN 'nouasprezece'
+WHEN 20 THEN 'douazeci'
+END;
+DBMS_OUTPUT.PUT_LINE('Transcrierea numarului '||v_numar||' este '||v_transcriere);
+END;
+5.	O persoană s-a născut între anii 1950-2000. În funcţie de anul naşterii să se afişeze mesaje precum: „Domnul X s-a născut în anii ’80.” Testaţi funcţionalitatea secvenţelor ELSIF, în cazul în care le schimbaţi ordinea;
+DECLARE 
+v_an NUMBER := 1960;
+BEGIN 
+IF v_an BETWEEN 1950 AND 1959 THEN 
+DBMS_OUTPUT.PUT_LINE('Persoana a fost nascuta in anii 50');
+ELSIF v_an BETWEEN 1960 AND 1969 THEN 
+DBMS_OUTPUT.PUT_LINE('Persoana a fost nascuta in anii 60');
+ELSIF v_an BETWEEN 1970 AND 1979 THEN 
+DBMS_OUTPUT.PUT_LINE('Persoana a fost nascuta in anii 70');
+ELSIF v_an BETWEEN 1980 AND 1989 THEN 
+DBMS_OUTPUT.PUT_LINE('Persoana a fost nascuta in anii 80');
+ELSIF v_an BETWEEN 1990 AND 1999 THEN 
+DBMS_OUTPUT.PUT_LINE('Persoana a fost nascuta in anii 90');
+END IF;
+END;
+6.	Calculaţi factorialul unui număr memorat într-o variabilă. Se vor folosi toate variantele de structuri iterative cunoscute;
+//factorial cu basic loop
+DECLARE
+v_numar NUMBER := 3;
+v_fact NUMBER :=1;
+v_index NUMBER :=1;
+BEGIN 
+LOOP
+v_fact := v_fact*v_index;
+v_index := v_index+1;
+EXIT WHEN v_index>v_numar;
+END LOOP;
+DBMS_OUTPUT.PUT_LINE('Factorialul numarului '||v_numar||' este '||v_fact);
+END;
+
+//factorial cu while
+DECLARE
+v_numar NUMBER := 3;
+v_fact NUMBER :=1;
+v_index NUMBER :=1;
+BEGIN 
+WHILE v_index<=v_numar LOOP
+v_fact := v_fact*v_index;
+v_index := v_index+1;
+END LOOP;
+DBMS_OUTPUT.PUT_LINE('Factorialul numarului '||v_numar||' este '||v_fact);
+END;
+
+//factorial cu for
+DECLARE
+v_numar NUMBER := 3;
+v_fact NUMBER :=1;
+v_index NUMBER :=1;
+BEGIN 
+FOR i IN v_index..v_numar LOOP
+v_fact := v_fact*v_index;
+v_index := v_index+1;
+END LOOP;
+DBMS_OUTPUT.PUT_LINE('Factorialul numarului '||v_numar||' este '||v_fact);
+END;
+7.	Să se introducă în cadrul tabelei Angajati 4 înregistrări: Id-urile să fie următoarele 4 numere luate secvenţial, numele şi prenumele vor fi generice „Nume”/”Prenume” concatenat cu id-ul. Toţi au fost angajaţi acum o lună ca reprezentanţi de vânzări cu salariul minim al acestei categorii, căruia i se adaugă un spor generat aleatoriu între 200 şi 500$.
+DECLARE
+v_employee_id angajati.employee_id%TYPE;
+v_sal_min angajati.salary%TYPE;
+v_rand NUMBER;
+BEGIN
+SELECT MAX(employee_id) INTO v_employee_id FROM angajati
+WHERE job_id = 'SA_REP';
+SELECT MIN(salary) INTO v_sal_min FROM angajati
+WHERE job_id = 'SA_REP';
+FOR i IN 1..4 LOOP
+INSERT INTO angajati(employee_id, first_name,last_name,email,job_id,hire_date,salary,bonus)
+VALUES((v_employee_id+i),'Prenume','Nume','numeprenume@yahoo.com','SA_REP',ADD_MONTHS(SYSDATE,-1),v_sal_min, (select round(DBMS_RANDOM.value(200,500)) from dual));
+END LOOP;
+END;

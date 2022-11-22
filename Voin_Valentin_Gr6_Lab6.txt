@@ -1,0 +1,68 @@
+Realizaţi blocuri anonime diferite pentru rezolvarea următoarelor cerinţe:
+1.       Utilizând o variabilă compusă v_angajat cu structură identică cu o înregistrare din cadrul tabelei angajaţi, extrageţi şi afişaţi din tabela amintită următoarele date legate de Dv. (identificator, nume, prenume, funcţie, salariu şi data angajării). Notă: Într-un laborator anterior aveaţi ca sarcină „angajarea” Dv.;
+DECLARE
+v_angajat angajati%ROWTYPE;
+BEGIN 
+SELECT * INTO v_angajat
+FROM angajati WHERE employee_id=236;
+DBMS_OUTPUT.PUT_LINE('Identificator: '||v_angajat.employee_id);
+DBMS_OUTPUT.PUT_LINE('Prenume: '||v_angajat.first_name);
+DBMS_OUTPUT.PUT_LINE('Nume: '||v_angajat.last_name);
+DBMS_OUTPUT.PUT_LINE('Functie: '||v_angajat.job_id);
+DBMS_OUTPUT.PUT_LINE('Salariu: '||v_angajat.salary);
+DBMS_OUTPUT.PUT_LINE('Data angajarii: '||TO_CHAR(v_angajat.hire_date,'DD-Mon-YYYY'));
+END;
+2.       Cu o astfel de variabilă, iniţializaţi datele specificate la exerciţiul anterior cu valori corespunzătoare unei persoane din familia Dv. Angajaţi apoi şi această persoană, referind variabila sau elemente ale acesteia în locul constantelor folosite la iniţializare;
+DECLARE
+v_ang_record angajati%ROWTYPE;
+BEGIN
+SELECT MAX(employee_id)+1 INTO v_ang_record.employee_id FROM angajati;
+v_ang_record.first_name := 'Simona';
+v_ang_record.last_name := 'Voin';
+v_ang_record.job_id := 'SA_REP';
+v_ang_record.salary := 6000;
+v_ang_record.hire_date := SYSDATE;
+v_ang_record.email := 'svoin@gmail.com';
+INSERT INTO angajati(employee_id, first_name, last_name, job_id, salary, hire_date, email)
+VALUES (v_ang_record.employee_id, v_ang_record.first_name, v_ang_record.last_name, v_ang_record.job_id, v_ang_record.salary, v_ang_record.hire_date, v_ang_record.email);
+END;
+3.       Definiţi un tip propriu, care să aibă denumirea atributelor identică cu a atributelor din tabela Angajaţi, dar tradusă în limba română. Folosiţi variabila pentru a extrage şi afişa informaţiile legate de Dv;
+DECLARE 
+TYPE ang_info IS RECORD
+(identificator angajati.employee_id%TYPE,
+prenume angajati.first_name%TYPE,
+nume angajati.last_name%TYPE,
+functie angajati.job_id%TYPE,
+salariu angajati.salary%TYPE,
+data_angajarii angajati.hire_date%TYPE);
+v_ang_info_rec ang_info;
+BEGIN
+SELECT employee_id,first_name,last_name,job_id,salary,hire_date 
+INTO v_ang_info_rec 
+FROM angajati 
+WHERE employee_id=236;
+DBMS_OUTPUT.PUT_LINE('Identificator: '||v_ang_info_rec.identificator);
+DBMS_OUTPUT.PUT_LINE('Prenume: '||v_ang_info_rec.prenume);
+DBMS_OUTPUT.PUT_LINE('Nume: '||v_ang_info_rec.nume);
+DBMS_OUTPUT.PUT_LINE('Functie: '||v_ang_info_rec.functie);
+DBMS_OUTPUT.PUT_LINE('Salariu: '||v_ang_info_rec.salariu);
+DBMS_OUTPUT.PUT_LINE('Data angajarii : '||TO_CHAR(v_ang_info_rec.data_angajarii,'DD-Mon-YYYY'));
+END;
+4.       La fel ca la exerciţiul anterior, dar se vor extrage informaţiile aferente mai multor angajaţi (de exemplu a Dv. şi a rudeniei angajate);
+DECLARE 
+TYPE t_ang_rec IS TABLE OF angajati%ROWTYPE
+INDEX BY BINARY_INTEGER;
+v_ang_rec_tab t_ang_rec;
+BEGIN 
+FOR ang_rec IN (SELECT * FROM angajati WHERE last_name='Voin') LOOP
+v_ang_rec_tab(ang_rec.angloyee_id) := ang_rec;
+DBMS_OUTPUT.PUT_LINE(v_ang_rec_tab(ang_rec.employee_id).employee_id);
+DBMS_OUTPUT.PUT_LINE(v_ang_rec_tab(ang_rec.employee_id).first_name);
+DBMS_OUTPUT.PUT_LINE(v_ang_rec_tab(ang_rec.employee_id).last_name);
+DBMS_OUTPUT.PUT_LINE(v_ang_rec_tab(ang_rec.employee_id).job_id);
+DBMS_OUTPUT.PUT_LINE(v_ang_rec_tab(ang_rec.employee_id).salary);
+DBMS_OUTPUT.PUT_LINE(v_ang_rec_tab(ang_rec.employee_id).hire_date);
+DBMS_OUTPUT.NEW_LINE;
+END LOOP;
+END;
+
