@@ -1,0 +1,52 @@
+1.       Funcţia AFLA_FUNCTIE va căuta în tabela ANGAJATI funcţia (JOB_ID-ul) unui angajat, căutarea făcându-se după identificatorul angajatului. Să se trateze şi cazul în care nu există un astfel de ID. Accesaţi funcţia în diverse moduri;
+CREATE OR REPLACE FUNCTION afla_functie(
+p_ang_id IN angajati.employee_id%TYPE)
+RETURN angajati.job_id%TYPE IS
+v_job_id angajati.job_id%TYPE;
+BEGIN
+SELECT job_id INTO v_job_id FROM angajati WHERE employee_id=p_ang_id;
+RETURN v_job_id;
+EXCEPTION 
+WHEN NO_DATA_FOUND THEN RETURN NULL;
+END afla_functie;
+
+DECLARE
+v_id angajati.job_id%TYPE;
+BEGIN
+v_id := afla_functie(102);
+DBMS_OUTPUT.PUT_LINE('Functia angajatului este: '||v_id);
+END;
+
+BEGIN
+DBMS_OUTPUT.PUT_LINE('Functia angajatului este: '||afla_functie(102));
+END;
+
+SELECT first_name, last_name, afla_functie(employee_id) FROM angajati;
+
+2.       Funcţia CALCUL_IMPOZIT va calcula în funcţie de identificatorul angajatului care este valoarea impozitului anual al angajatului, în funcţie de salariu. Astfel, pentru salarii sub 5.000 impozitul e de 5%; între 5-10.000 e de 10% pentru diferenţă; 15% pentru salarii peste 10.000;
+CREATE OR REPLACE FUNCTION calcul_impozit(
+p_ang_id IN angajati.employee_id%TYPE)
+RETURN NUMBER IS
+v_salariu angajati.salary%TYPE;
+v_impozit NUMBER(10,2);
+BEGIN
+SELECT salary INTO v_salariu FROM angajati WHERE employee_id=p_ang_id;
+IF v_salariu < 5000 THEN
+v_impozit := v_salariu*0.05;
+ELSIF v_salariu BETWEEN 5000 AND 10000 THEN
+v_impozit := (0.05*5000 + 0.1*(v_salariu-5000));
+ELSE
+v_impozit := 0.15*v_salariu;
+END IF;
+RETURN v_impozit;
+END calcul_impozit;
+
+
+3.       Să se afişeze câte obiecte (funcţii, proceduri etc) aveţi ca utilizator OAE, prin interogarea dicţionarului de date. Cum se numesc (doar) funcţiile şi procedurile create până acum?
+SELECT COUNT(*) FROM USER_OBJECTS;
+SELECT object_name FROM user_objects WHERE object_type='FUNCTION';
+SELECT object_name FROM user_objects WHERE object_type='PROCEDURE';
+
+4.       Scrieţi interogarea prin intermediul căreia să afişaţi liniile de cod ale funcţiei de la punctul 2;
+SELECT text FROM USER_SOURCE WHERE name='CALCUL_IMPOZIT' ORDER BY line;
+

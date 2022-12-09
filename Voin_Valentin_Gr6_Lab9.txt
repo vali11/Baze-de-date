@@ -1,0 +1,271 @@
+Pachete PL/SQL
+
+1.	Sa se realizeze un pachet (package) intitulat SALARIZARE, în care sa se utilizeze functii si proceduri create în cadrul celor doua sectiuni anterioare (Proceduri PL/SQL, respectiv Functii si declansatori PL/SQL);
+CREATE OR REPLACE PACKAGE salarizare IS
+PROCEDURE angajez;
+PROCEDURE angajeaza_ma;
+PROCEDURE angajez_ca (v_dep IN VARCHAR2);
+PROCEDURE angajez_masiv_ca (v_dep IN VARCHAR2, v_nr_pers IN INT);
+PROCEDURE concediez_ultim;
+FUNCTION afla_functie(p_ang_id IN angajati.employee_id%TYPE) RETURN angajati.job_id%TYPE;
+FUNCTION calcul_impozit(p_ang_id IN angajati.employee_id%TYPE) RETURN NUMBER;
+END salarizare;
+
+CREATE OR REPLACE PACKAGE BODY salarizare IS
+PROCEDURE angajez IS
+v_data angajati.hire_date%TYPE := SYSDATE;
+BEGIN
+INSERT INTO angajati (employee_id, first_name, last_name, email, phone_number, hire_date, job_id, salary)
+VALUES (300, 'Roxana','Popescu', 'roxi@gmail.com', 0722351889, v_data, 'SA_REP', 5000);
+DBMS_OUTPUT.PUT_LINE('Inserare realizata cu succes');
+END angajez;
+PROCEDURE angajeaza_ma IS
+v_ang_id angajati.employee_id%TYPE;
+v_nume angajati.last_name%TYPE := 'Voin';
+v_prenume angajati.first_name%TYPE := 'Valentin';
+v_salary angajati.salary%TYPE ;
+v_domeniu VARCHAR2(30) := 'ubbcluj.ro';
+BEGIN
+SELECT MAX(employee_id) + 1 INTO v_ang_id FROM angajati;
+SELECT MIN(salary) INTO v_salary FROM angajati WHERE job_id='SA_REP';
+INSERT INTO angajati (employee_id, first_name, last_name, email, phone_number, hire_date, job_id, salary) VALUES(v_ang_id, v_prenume, v_nume, v_nume||'.'||v_prenume||'@'||v_domeniu, 0722365, SYSDATE,'SA_REP', v_salary);
+IF SQL%FOUND THEN 
+DBMS_OUTPUT.PUT_LINE('INSERARE CU SUCCES');
+ELSE 
+DBMS_OUTPUT.PUT_LINE('INSERARE FARA SUCCES');
+END IF;
+END angajeaza_ma;
+PROCEDURE angajez_ca (v_dep IN VARCHAR2) IS
+v_ang_id angajati.employee_id%TYPE;
+v_nume angajati.last_name%TYPE := 'Nume';
+v_prenume angajati.first_name%TYPE := 'Prenume';
+v_salary angajati.salary%TYPE ;
+v_domeniu VARCHAR2(30) := 'ubbcluj.ro';
+v_min INT;
+v_max INT;
+BEGIN
+SELECT MIN(salary) INTO v_min FROM angajati WHERE job_id=v_dep;
+SELECT MAX(salary) INTO v_max FROM angajati WHERE job_id=v_dep;
+v_salary := dbms_random.value(v_min,v_max);
+SELECT MAX(employee_id) + 1 INTO v_ang_id FROM angajati;
+INSERT INTO angajati (employee_id, first_name, last_name, email, phone_number, hire_date, job_id, salary) VALUES(v_ang_id, v_prenume, v_nume, v_nume||'.'||v_prenume||'@'||v_domeniu, 722365, SYSDATE,v_dep, v_salary);
+IF SQL%FOUND THEN 
+DBMS_OUTPUT.PUT_LINE('INSERARE CU SUCCES');
+ELSE 
+DBMS_OUTPUT.PUT_LINE('INSERARE FARA SUCCES');
+END IF;
+END angajez_ca;
+PROCEDURE angajez_masiv_ca (v_dep IN VARCHAR2, v_nr_pers IN INT) IS
+v_ang_id angajati.employee_id%TYPE;
+v_nume angajati.last_name%TYPE := 'Nume';
+v_prenume angajati.first_name%TYPE := 'Prenume';
+v_salary angajati.salary%TYPE ;
+v_domeniu VARCHAR2(30) := 'ubbcluj.ro';
+v_min INT;
+v_max INT;
+BEGIN
+SELECT MIN(salary) INTO v_min FROM angajati WHERE job_id=v_dep;
+SELECT MAX(salary) INTO v_max FROM angajati WHERE job_id=v_dep;
+FOR i IN 1..v_nr_pers LOOP
+v_salary := dbms_random.value(v_min,v_max);
+SELECT MAX(employee_id) + 1 INTO v_ang_id FROM angajati;
+INSERT INTO angajati (employee_id, first_name, last_name, email, phone_number, hire_date, job_id, salary) VALUES(v_ang_id, v_prenume||i, v_nume, v_nume||'.'||v_prenume||i||'@'||v_domeniu, 0722365, SYSDATE,v_dep, v_salary);
+IF SQL%FOUND THEN 
+DBMS_OUTPUT.PUT_LINE('INSERARE CU SUCCES');
+ELSE 
+DBMS_OUTPUT.PUT_LINE('INSERARE FARA SUCCES');
+END IF;
+END LOOP;
+END angajez_masiv_ca;
+PROCEDURE concediez_ultim IS
+v_ang_id angajati.employee_id%TYPE;
+PROCEDURE afiseaza IS 
+BEGIN 
+IF SQL%FOUND THEN 
+DBMS_OUTPUT.PUT_LINE('Stergere efectuata cu succes');
+ELSE
+DBMS_OUTPUT.PUT_LINE('Stergere esuata');
+END IF;
+END afiseaza;
+BEGIN 
+SELECT MAX(employee_id) INTO v_ang_id FROM angajati;
+DELETE FROM angajati WHERE employee_id=v_ang_id;
+afiseaza;
+END concediez_ultim;
+FUNCTION afla_functie(
+p_ang_id IN angajati.employee_id%TYPE)
+RETURN angajati.job_id%TYPE IS
+v_job_id angajati.job_id%TYPE;
+BEGIN
+SELECT job_id INTO v_job_id FROM angajati WHERE employee_id=p_ang_id;
+RETURN v_job_id;
+EXCEPTION 
+WHEN NO_DATA_FOUND THEN RETURN NULL;
+END afla_functie;
+FUNCTION calcul_impozit(
+p_ang_id IN angajati.employee_id%TYPE)
+RETURN NUMBER IS
+v_salariu angajati.salary%TYPE;
+v_impozit NUMBER(10,2);
+BEGIN
+SELECT salary INTO v_salariu FROM angajati WHERE employee_id=p_ang_id;
+IF v_salariu < 5000 THEN
+v_impozit := v_salariu*0.05;
+ELSIF v_salariu BETWEEN 5000 AND 10000 THEN
+v_impozit := (0.05*5000 + 0.1*(v_salariu-5000));
+ELSE
+v_impozit := 0.15*v_salariu;
+END IF;
+RETURN v_impozit;
+END calcul_impozit;
+END salarizare;
+
+
+2.	Sa se adauge si o functie si o procedura locala, precum si o variabila globala.
+CREATE OR REPLACE PACKAGE salarizare IS
+g_max_sal_marire CONSTANT NUMBER := 0.20;
+PROCEDURE angajez;
+PROCEDURE angajeaza_ma;
+PROCEDURE angajez_ca (v_dep IN VARCHAR2);
+PROCEDURE angajez_masiv_ca (v_dep IN VARCHAR2, v_nr_pers IN INT);
+PROCEDURE concediez_ultim;
+PROCEDURE modificare_salariu(p_ang_id angajati.employee_id%TYPE, p_sal_nou angajati.salary%TYPE);
+FUNCTION afla_functie(p_ang_id IN angajati.employee_id%TYPE) RETURN angajati.job_id%TYPE;
+FUNCTION calcul_impozit(p_ang_id IN angajati.employee_id%TYPE) RETURN NUMBER;
+END salarizare;
+
+CREATE OR REPLACE PACKAGE BODY salarizare IS
+PROCEDURE angajez IS
+v_data angajati.hire_date%TYPE := SYSDATE;
+BEGIN
+INSERT INTO angajati (employee_id, first_name, last_name, email, phone_number, hire_date, job_id, salary)
+VALUES (300, 'Roxana','Popescu', 'roxi@gmail.com', 0722351889, v_data, 'SA_REP', 5000);
+DBMS_OUTPUT.PUT_LINE('Inserare realizata cu succes');
+END angajez;
+PROCEDURE angajeaza_ma IS
+v_ang_id angajati.employee_id%TYPE;
+v_nume angajati.last_name%TYPE := 'Voin';
+v_prenume angajati.first_name%TYPE := 'Valentin';
+v_salary angajati.salary%TYPE ;
+v_domeniu VARCHAR2(30) := 'ubbcluj.ro';
+BEGIN
+SELECT MAX(employee_id) + 1 INTO v_ang_id FROM angajati;
+SELECT MIN(salary) INTO v_salary FROM angajati WHERE job_id='SA_REP';
+INSERT INTO angajati (employee_id, first_name, last_name, email, phone_number, hire_date, job_id, salary) VALUES(v_ang_id, v_prenume, v_nume, v_nume||'.'||v_prenume||'@'||v_domeniu, 0722365, SYSDATE,'SA_REP', v_salary);
+IF SQL%FOUND THEN 
+DBMS_OUTPUT.PUT_LINE('INSERARE CU SUCCES');
+ELSE 
+DBMS_OUTPUT.PUT_LINE('INSERARE FARA SUCCES');
+END IF;
+END angajeaza_ma;
+PROCEDURE angajez_ca (v_dep IN VARCHAR2) IS
+v_ang_id angajati.employee_id%TYPE;
+v_nume angajati.last_name%TYPE := 'Nume';
+v_prenume angajati.first_name%TYPE := 'Prenume';
+v_salary angajati.salary%TYPE ;
+v_domeniu VARCHAR2(30) := 'ubbcluj.ro';
+v_min INT;
+v_max INT;
+BEGIN
+SELECT MIN(salary) INTO v_min FROM angajati WHERE job_id=v_dep;
+SELECT MAX(salary) INTO v_max FROM angajati WHERE job_id=v_dep;
+v_salary := dbms_random.value(v_min,v_max);
+SELECT MAX(employee_id) + 1 INTO v_ang_id FROM angajati;
+INSERT INTO angajati (employee_id, first_name, last_name, email, phone_number, hire_date, job_id, salary) VALUES(v_ang_id, v_prenume, v_nume, v_nume||'.'||v_prenume||'@'||v_domeniu, 722365, SYSDATE,v_dep, v_salary);
+IF SQL%FOUND THEN 
+DBMS_OUTPUT.PUT_LINE('INSERARE CU SUCCES');
+ELSE 
+DBMS_OUTPUT.PUT_LINE('INSERARE FARA SUCCES');
+END IF;
+END angajez_ca;
+PROCEDURE angajez_masiv_ca (v_dep IN VARCHAR2, v_nr_pers IN INT) IS
+v_ang_id angajati.employee_id%TYPE;
+v_nume angajati.last_name%TYPE := 'Nume';
+v_prenume angajati.first_name%TYPE := 'Prenume';
+v_salary angajati.salary%TYPE ;
+v_domeniu VARCHAR2(30) := 'ubbcluj.ro';
+v_min INT;
+v_max INT;
+BEGIN
+SELECT MIN(salary) INTO v_min FROM angajati WHERE job_id=v_dep;
+SELECT MAX(salary) INTO v_max FROM angajati WHERE job_id=v_dep;
+FOR i IN 1..v_nr_pers LOOP
+v_salary := dbms_random.value(v_min,v_max);
+SELECT MAX(employee_id) + 1 INTO v_ang_id FROM angajati;
+INSERT INTO angajati (employee_id, first_name, last_name, email, phone_number, hire_date, job_id, salary) VALUES(v_ang_id, v_prenume||i, v_nume, v_nume||'.'||v_prenume||i||'@'||v_domeniu, 0722365, SYSDATE,v_dep, v_salary);
+IF SQL%FOUND THEN 
+DBMS_OUTPUT.PUT_LINE('INSERARE CU SUCCES');
+ELSE 
+DBMS_OUTPUT.PUT_LINE('INSERARE FARA SUCCES');
+END IF;
+END LOOP;
+END angajez_masiv_ca;
+PROCEDURE concediez_ultim IS
+v_ang_id angajati.employee_id%TYPE;
+PROCEDURE afiseaza IS 
+BEGIN 
+IF SQL%FOUND THEN 
+DBMS_OUTPUT.PUT_LINE('Stergere efectuata cu succes');
+ELSE
+DBMS_OUTPUT.PUT_LINE('Stergere esuata');
+END IF;
+END afiseaza;
+BEGIN 
+SELECT MAX(employee_id) INTO v_ang_id FROM angajati;
+DELETE FROM angajati WHERE employee_id=v_ang_id;
+afiseaza;
+END concediez_ultim;
+FUNCTION afla_functie(
+p_ang_id IN angajati.employee_id%TYPE)
+RETURN angajati.job_id%TYPE IS
+v_job_id angajati.job_id%TYPE;
+BEGIN
+SELECT job_id INTO v_job_id FROM angajati WHERE employee_id=p_ang_id;
+RETURN v_job_id;
+EXCEPTION 
+WHEN NO_DATA_FOUND THEN RETURN NULL;
+END afla_functie;
+FUNCTION calcul_impozit(
+p_ang_id IN angajati.employee_id%TYPE)
+RETURN NUMBER IS
+v_salariu angajati.salary%TYPE;
+v_impozit NUMBER(10,2);
+BEGIN
+SELECT salary INTO v_salariu FROM angajati WHERE employee_id=p_ang_id;
+IF v_salariu < 5000 THEN
+v_impozit := v_salariu*0.05;
+ELSIF v_salariu BETWEEN 5000 AND 10000 THEN
+v_impozit := (0.05*5000 + 0.1*(v_salariu-5000));
+ELSE
+v_impozit := 0.15*v_salariu;
+END IF;
+RETURN v_impozit;
+END calcul_impozit;
+FUNCTION validare_salariu
+(p_salariu_vechi angajati.salary%TYPE,
+p_salariu_nou angajati.salary%TYPE)
+RETURN BOOLEAN IS
+BEGIN
+IF p_salariu_nou >
+(p_salariu_vechi * (1 + g_max_sal_marire)) THEN
+RETURN FALSE;
+ELSE
+RETURN TRUE;
+END IF;
+END validare_salariu;
+PROCEDURE modificare_salariu 
+(p_ang_id angajati.employee_id%TYPE, p_sal_nou angajati.salary%TYPE)
+IS v_salariu_vechi angajati.salary%TYPE; 
+BEGIN
+SELECT salary INTO v_salariu_vechi FROM angajati
+WHERE employee_id = p_ang_id;
+IF validare_salariu(v_salariu_vechi, p_sal_nou) THEN
+UPDATE angajati
+SET salary = p_sal_nou
+WHERE employee_id = p_ang_id;
+ELSE
+RAISE_APPLICATION_ERROR(-20210, 'Raise too high');
+END IF;
+END modificare_salariu;
+END salarizare;
+Testati toate functionalitatile pachetului realizat.
