@@ -1,0 +1,94 @@
+Marca NUMBER(5)
+CNP CHAR(13)
+Nume VARCHAR2(30)
+Prenume VARCHAR2(30)
+Strada VARCHAR2(20)
+Nr VARCHAR2(7)
+Ap NUMBER(3)
+CodPostal CHAR(6)
+Localitate VARCHAR2(30)
+CodJudet CHAR(2)
+Judet VARCHAR2(25)
+Data DATE(8)
+CodPiesa NUMBER(5)
+Piesa VARCHAR2(20)
+Cantitate NUMBER(6)
+
+
+SELECT nume_atribut, VSIZE(nume_atribut)
+FROM nume_tabel;
+
+! VOM LUA IN CONSIDERARE NUMARUL MAXIM DE BYTES PE CARE IL POATE OCUPA FIECARE CAMP
+
+In cazul FN1:
+- Pentru Marca, se ocupa 1000*3*250*5 = 3.750.000 bytes
+- Pentru CNP, se ocupa 1000*3*250*13 = 9.750.000 bytes
+- Pentru Nume, se ocupa 1000*3*250*30 = 22.500.000 bytes
+- Pentru Prenume, se ocupa 1000*3*250*30 = 22.500.000 bytes
+- Pentru Strada, se ocupa 1000*3*250*20 = 15.000.000 bytes
+- Pentru Nr, se ocupa 1000*3*250*7 = 5.250.000 bytes
+- Pentru Ap, se ocupa 1000*3*250*3 = 2.250.000 bytes
+- Pentru CodPostal, se ocupa 1000*3*250*6 = 4.500.000 bytes
+- Pentru Localitate, se ocupa 1000*3*250*30 = 22.500.000 bytes
+- Pentru CodJudet, se ocupa 1000*3*250*2 = 1.500.000 bytes
+- Pentru Judet, se ocupa 1000*3*250*25 = 18.750.000 bytes
+- Pentru Data, se ocupa 1000*3*250*8 = 6.000.000 bytes (pentru fiecare angajat, data apare de 3 ori pentru o singura zi, timp de 250 de zile)
+- Pentru CodPiesa, se ocupa 1000*3*250*5 = 3.750.000 bytes
+- Pentru Piesa, se ocupa 1000*3*250*20 = 15.000.000 bytes
+- Pentru Cantitate, se ocupa 1000*3*250*6 = 4.500.000 bytes
+
+TOTAL FN1: 29.421.000 bytes// 29.763.000
+
+
+
+In cazul FN3:
+
+In tabelul ANGAJATI:
+- Pentru Marca, se ocupa 1000*5 = 5.000 bytes
+- Pentru CNP, se ocupa 1000*13 = 13.000 bytes
+- Pentru Nume, se ocupa 1000*30 = 30.000 bytes
+- Pentru Prenume, se ocupa 1000*30 = 30.000 bytes
+- Pentru Strada, se ocupa 1000*20 = 20.000 bytes
+- Pentru Nr, se ocupa 1000*7 = 7.000 bytes
+- Pentru Ap, se ocupa 1000*3 = 3.000 bytes
+- Pentru CodPostal, se ocupa 1000*6 = 6.000 bytes
+Subtotal: 114.000 bytes
+
+In tabelul LOCALITATI:
+- Pentru CodPostal, se ocupa 15*6 = 90 bytes 
+- Pentru Localitate, se ocupa 15*30 = 450 bytes 
+- Pentru CodJudet, se ocupa 15*2 = 30 bytes 
+Subtotal: 570 bytes
+
+In tabelul JUDETE:
+- Pentru CodJudet, se ocupa 4*2 = 8 bytes
+- Pentru Judet, se ocupa 4*25 = 100 bytes
+Subtotal: 108 bytes
+
+In tabelul PIESE: 
+- Pentru CodPiesa, se ocupa 500*5 = 2.500 bytes
+- Pentru Piesa, se ocupa 500*20 = 10.000 bytes
+Subtotal: 12.500 bytes
+
+In tabelul ANGAJATI_PIESE:
+- Pentru Marca, se ocupa 1000*3*250*5 = 3.750.000 bytes
+- Pentru Data, se ocupa 1000*3*250*8 = 6.000.000 bytes
+- Pentru CodPiesa, se ocupa 1000*3*250*5 = 3.750.000 bytes
+- Pentru Cantitate, se ocupa 1000*3*250*6 = 4.500.000 bytes
+Subtotal: 18.000.000
+
+TOTAL FN3: 18.127.178 bytes
+
+FN1/FN3 = 8,68
+
+
+
+
+
+
+
+
+
+
+
+
